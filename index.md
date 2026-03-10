@@ -1,6 +1,8 @@
 # CMPE 314 - Software Engineering
 
-## Hospital Appointment Scheduler
+## Project 3 - Hospital Appointment Scheduler
+
+### Class Group 3
 
 ### Team Members
 - Joseph Makolo Mupira
