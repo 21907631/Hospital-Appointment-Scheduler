@@ -15,4 +15,6 @@
 The Hospital Appointment Scheduler is a system that allows patients to book appointment with doctors online.
 It displays available time slots, managesdoctor schedules, and helps reduce waiting time in hospitals.
 
+### This is the Gantt Chart 
+
 ![Gantt Chart](docs/images/Picture1.png)
