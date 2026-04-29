@@ -1,0 +1,47 @@
+@startuml
+Actor Student
+participant KioskSystem
+participant BookScanner
+database    LibraryDatabase
+participant FineCalculator
+participant NotificationService
+participant ShelfReturnMechanism
+
+Student->KioskSystem: places book on the scanner.
+KioskSystem->BookScanner: scan book ID.
+BookScanner->KioskSystem: returns book ID.
+KioskSystem->LibraryDatabase: validates the book.
+LibraryDatabase->KioskSystem: book is valid.
+
+alt book is invalid
+KioskSystem->Students: displays error.
+KioskSystem->BookScanner: rejects book.
+
+else book is valid
+KioskSystem->LibraryDatabase: check due date.
+LibraryDatabase-->KioskSystem: due date status!.
+
+alt book is on time
+KioskSystem->LibraryDatabase: updates inventory.
+LibraryDatabase-->KioskSystem: inventory updated.
+
+else book is overdue
+KioskSystem->FineCalculator: calculate the fine.
+FineCalculator-->KioskSystem: fine amount.
+KioskSystem->Student: display fine amount.
+Student->KioskSystem: confirm payment.
+KioskSystem->PaymentSystem: process payment.
+PaymentSystem-->KioskSystem: payment confirmation.
+
+end
+
+KioskSystem->NotificationService:  send “return confirmed” message.
+NotificationService-->KioskSystem: notification for message.
+
+KioskSystem->ShelfReturnMechanism:  place book on shelf.
+ShelfReturnMechanism-->KioskSystem:  confirm placement.
+KioskSystem->Students: displays “Return successful”.
+
+
+return ok
+@enduml
