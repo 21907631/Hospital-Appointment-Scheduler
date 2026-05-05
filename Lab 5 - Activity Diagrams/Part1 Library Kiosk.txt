@@ -1,0 +1,37 @@
+@startuml
+title Library Kiosk - Return Book
+
+start
+:Student places book on scanner;
+:Scan book ID;
+:Validate book against database;
+
+if (Is book valid?) then (yes)
+  :Check due date;
+  if (Is book overdue?) then (yes)
+    :Calculate fine;
+    :Present fine to student;
+    if (Pay fine?) then (yes)
+      :Record payment;
+    else (no)
+      :Reject return;
+      stop
+    endif
+  else (on time)
+  endif
+
+  fork
+    :Update inventory;
+  fork again
+    :Send return notification;
+  fork again
+    :Place book on shelf;
+  end fork
+
+  :Display "Return successful";
+  stop
+else (invalid)
+  :Display error / Reject book;
+  stop
+endif
+@enduml
