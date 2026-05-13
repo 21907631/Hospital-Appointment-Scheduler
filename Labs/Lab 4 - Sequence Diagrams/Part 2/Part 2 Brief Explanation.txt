@@ -1,0 +1,54 @@
+Lab 4 - Part 2: Sequence Diagram — Hospital Appointment Scheduler
+
+SCENARIO: Book an Appointment
+-------------------------------
+This sequence diagram models the interaction between a Patient and the
+Hospital Appointment Scheduler system when booking an appointment online.
+It covers three consecutive flows: authentication, doctor search, and
+appointment booking.
+
+PARTICIPANTS
+------------
+- Patient           : The end user initiating the booking
+- Frontend          : React.js web interface
+- Backend           : Node.js / Express.js API server
+- Supabase          : PostgreSQL database (also handles authentication)
+- NotificationService: Email/SMS service (Nodemailer / Twilio)
+
+FLOW DESCRIPTION
+----------------
+1. Authentication
+   The patient enters their credentials on the login page. The Frontend
+   sends them to the Backend, which verifies the JWT token with Supabase.
+   On success, an access token is returned and the patient sees their
+   dashboard.
+
+2. Doctor Search
+   The patient searches for a doctor by specialty and/or date. The
+   Frontend calls the Backend, which queries the doctors and time_slots
+   tables in Supabase. The results (available doctors and open slots)
+   are returned and displayed to the patient.
+
+3. Appointment Booking
+   The patient selects a doctor, picks a time slot, and enters a reason.
+   The Frontend sends a POST request to the Backend. Before inserting,
+   the Backend checks Supabase for a double-booking conflict using the
+   unique constraint on (doctor_id, scheduled_at).
+
+   - If the slot is already taken: the Backend returns a 409 Conflict
+     and the patient is notified that the slot is unavailable.
+   - If the slot is free: the Backend inserts the appointment with
+     status 'pending', then triggers the NotificationService to send
+     a booking confirmation to the patient and a new-appointment alert
+     to the doctor. A 201 Created response is sent back and the patient
+     sees a success message.
+
+KEY DESIGN DECISIONS
+--------------------
+- Double-booking is prevented at the database level via a unique
+  constraint, not just application logic, ensuring data integrity.
+- Notifications are sent after a successful insert, matching the
+  automated reminder requirement (FR-06) from the project proposal.
+- The Backend sits between the Frontend and Supabase so that
+  role-based access control and business rules are always enforced
+  server-side, regardless of the client.

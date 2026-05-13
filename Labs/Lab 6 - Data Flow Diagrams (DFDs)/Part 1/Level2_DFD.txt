@@ -1,0 +1,24 @@
+@startuml Level2_DFD
+!define RECTANGLE class
+
+' External Entity
+RECTANGLE Student <<External>>
+
+' Data Stores
+RECTANGLE D2_BorrowerRecords <<Data Store>>
+RECTANGLE D3_TransactionLog <<Data Store>>
+
+' Sub-Processes
+RECTANGLE P3_1_CalculateFine <<Process>>
+RECTANGLE P3_2_PresentFine <<Process>>
+RECTANGLE P3_3_RecordPayment <<Process>>
+
+' Data Flows
+' Incoming overdue info
+P3_1_CalculateFine --> P3_2_PresentFine : Calculated Fine
+P3_2_PresentFine --> Student : Fine Amount
+Student --> P3_3_RecordPayment : Payment Amount
+P3_3_RecordPayment --> D2_BorrowerRecords : Update Payment Status
+P3_3_RecordPayment --> D3_TransactionLog : Record Fine Transaction
+P3_3_RecordPayment --> P4_UpdateInventory : Payment Confirmation
+@enduml

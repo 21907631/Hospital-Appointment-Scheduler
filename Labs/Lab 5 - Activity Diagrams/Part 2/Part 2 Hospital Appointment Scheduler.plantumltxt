@@ -1,0 +1,46 @@
+@startuml Hospital Appointment Scheduler - Cancel Appointment
+
+title Hospital Appointment Scheduler - Cancel Appointment
+
+start
+
+:Patient logs into the system;
+:Open "My Appointments" page;
+:Select appointment to cancel;
+:System retrieves appointment details;
+
+if (Within cancellation window? (>= 24h)) then (yes)
+  :Display cancellation form;
+  :Patient enters reason and confirms;
+
+  if (Patient confirmed?) then (yes)
+    if (Refund eligible?) then (yes)
+      :Process refund;
+    else (no refund)
+      :Mark as cancelled (no refund);
+    endif
+
+    fork
+      :Update appointment status in database;
+    fork again
+      :Free up doctor's time slot;
+    fork again
+      :Notify doctor of cancellation;
+    fork again
+      :Send confirmation to patient;
+    end fork
+
+    :Show "Cancellation successful";
+    stop
+
+  else (back out)
+    :Return to appointment view;
+    stop
+  endif
+
+else (no - too late)
+  :Show "Cannot cancel - too close to appointment";
+  stop
+endif
+
+@enduml

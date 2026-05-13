@@ -1,0 +1,45 @@
+@startuml
+title Hospital Appointment Scheduler - Book Appointment
+
+Actor       Patient
+participant Frontend
+participant Backend
+database    Supabase
+participant NotificationService
+
+' --- Authentication ---
+Patient -> Frontend: enters credentials and clicks Login
+Frontend -> Backend: POST /api/auth/login
+Backend -> Supabase: verifyJWT(token)
+Supabase --> Backend: user profile (id, role = patient)
+Backend --> Frontend: 200 OK + access token
+Frontend --> Patient: shows dashboard
+
+' --- Search Doctors ---
+Patient -> Frontend: searches by specialty / availability
+Frontend -> Backend: GET /api/doctors?specialty=X&date=Y
+Backend -> Supabase: query doctors + time_slots
+Supabase --> Backend: list of available doctors and slots
+Backend --> Frontend: doctor list with available time slots
+Frontend --> Patient: displays doctors and open slots
+
+' --- Select Slot & Book ---
+Patient -> Frontend: selects doctor and time slot, enters reason
+Frontend -> Backend: POST /api/appointments\n{doctor_id, scheduled_at, reason}
+Backend -> Supabase: check for double-booking\n(doctor_id, scheduled_at) unique constraint
+Supabase --> Backend: slot is free
+
+alt slot already taken
+    Backend --> Frontend: 409 Conflict - slot unavailable
+    Frontend --> Patient: shows "Slot no longer available"
+else slot is free
+    Backend -> Supabase: INSERT INTO appointments\n(patient_id, doctor_id, scheduled_at, status='pending')
+    Supabase --> Backend: appointment created (id)
+    Backend -> NotificationService: send booking confirmation to patient
+    Backend -> NotificationService: notify doctor of new appointment
+    NotificationService --> Backend: notifications sent
+    Backend --> Frontend: 201 Created + appointment details
+    Frontend --> Patient: shows "Appointment booked successfully"
+end
+
+@enduml

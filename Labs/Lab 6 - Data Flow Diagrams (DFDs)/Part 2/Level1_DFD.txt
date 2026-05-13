@@ -1,0 +1,80 @@
+@startuml Level1_DFD
+!define RECTANGLE class
+
+' External Entities
+RECTANGLE Patient <<External>>
+RECTANGLE Doctor <<External>>
+RECTANGLE Admin <<External>>
+RECTANGLE NotificationService <<External>>
+
+' Data Stores
+RECTANGLE D1_Profiles <<Data Store>>
+RECTANGLE D2_Doctors <<Data Store>>
+RECTANGLE D3_TimeSlots <<Data Store>>
+RECTANGLE D4_Appointments <<Data Store>>
+RECTANGLE D5_Notifications <<Data Store>>
+
+' Processes
+RECTANGLE P1_AuthenticateUser <<Process>>
+RECTANGLE P2_SearchDoctors <<Process>>
+RECTANGLE P3_BookAppointment <<Process>>
+RECTANGLE P4_CancelAppointment <<Process>>
+RECTANGLE P5_ManageSchedule <<Process>>
+RECTANGLE P6_AdminDashboard <<Process>>
+RECTANGLE P7_SendNotification <<Process>>
+
+' P1 - Authentication
+Patient --> P1_AuthenticateUser : Login Credentials
+Doctor --> P1_AuthenticateUser : Login Credentials
+Admin --> P1_AuthenticateUser : Login Credentials
+P1_AuthenticateUser --> D1_Profiles : Lookup User
+D1_Profiles --> P1_AuthenticateUser : User Profile + Role
+P1_AuthenticateUser --> Patient : Access Token
+P1_AuthenticateUser --> Doctor : Access Token
+P1_AuthenticateUser --> Admin : Access Token
+
+' P2 - Search Doctors
+Patient --> P2_SearchDoctors : Specialty, Date Filter
+P2_SearchDoctors --> D2_Doctors : Query Doctors
+D2_Doctors --> P2_SearchDoctors : Doctor List
+P2_SearchDoctors --> D3_TimeSlots : Query Available Slots
+D3_TimeSlots --> P2_SearchDoctors : Open Time Slots
+P2_SearchDoctors --> Patient : Doctors + Available Slots
+
+' P3 - Book Appointment
+Patient --> P3_BookAppointment : Doctor ID, Slot, Reason
+P3_BookAppointment --> D4_Appointments : Check Double-Booking
+D4_Appointments --> P3_BookAppointment : Slot Status
+P3_BookAppointment --> D4_Appointments : Insert Appointment (status=pending)
+P3_BookAppointment --> P7_SendNotification : Booking Confirmation Details
+P3_BookAppointment --> Patient : Appointment Confirmation
+
+' P4 - Cancel Appointment
+Patient --> P4_CancelAppointment : Appointment ID, Reason
+P4_CancelAppointment --> D4_Appointments : Retrieve Appointment
+D4_Appointments --> P4_CancelAppointment : Appointment Details + scheduled_at
+P4_CancelAppointment --> D4_Appointments : Update Status = cancelled
+P4_CancelAppointment --> P7_SendNotification : Cancellation Details
+P4_CancelAppointment --> Patient : Cancellation Receipt
+
+' P5 - Manage Schedule (Doctor)
+Doctor --> P5_ManageSchedule : Availability, Time Slots
+P5_ManageSchedule --> D3_TimeSlots : Insert / Update Time Slots
+P5_ManageSchedule --> D4_Appointments : View Scheduled Appointments
+D4_Appointments --> P5_ManageSchedule : Appointment List
+P5_ManageSchedule --> Doctor : Updated Schedule
+
+' P6 - Admin Dashboard
+Admin --> P6_AdminDashboard : Management Commands, Report Requests
+P6_AdminDashboard --> D1_Profiles : Read / Update Users
+P6_AdminDashboard --> D4_Appointments : Read All Appointments
+P6_AdminDashboard --> Admin : Reports, User Data
+
+' P7 - Send Notification
+P7_SendNotification --> NotificationService : Email/SMS Payload
+NotificationService --> P7_SendNotification : Delivery Confirmation
+P7_SendNotification --> D5_Notifications : Log Notification
+P7_SendNotification --> Patient : Reminder / Confirmation
+P7_SendNotification --> Doctor : New Appointment / Cancellation Alert
+
+@enduml

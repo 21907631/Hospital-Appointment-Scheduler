@@ -1,0 +1,99 @@
+Lab 6 - Part 2: Data Flow Diagrams — Hospital Appointment Scheduler
+Course: CMPE314 - Software Engineering | Group 03
+====================================================================
+
+OVERVIEW
+--------
+These three DFDs model how data moves through the Hospital Appointment
+Scheduler at increasing levels of detail, based on the project proposal
+and the system currently being built (React + Express + Supabase).
+
+================================================================
+LEVEL 0 — Context Diagram
+================================================================
+Shows the system as a single black-box process surrounded by its
+four external entities:
+
+- Patient     : The primary user. Sends login credentials, booking
+                requests, and cancellation requests. Receives
+                confirmations, available slots, and reminders.
+- Doctor      : Sends availability schedules and appointment notes.
+                Receives appointment requests and cancellation alerts.
+- Admin       : Sends management commands and report requests.
+                Receives system reports and user data.
+- NotificationService (Nodemailer / Twilio): Receives email/SMS
+                payloads from the system and returns delivery status.
+
+Purpose: establishes system boundaries and all external interactions
+without revealing any internal logic.
+
+================================================================
+LEVEL 1 — System Decomposition
+================================================================
+Breaks the single system process into 7 sub-processes, each mapped
+to a functional requirement from the proposal:
+
+P1 - Authenticate User  (FR-01)
+  Verifies login credentials against the Profiles data store and
+  returns a role-based access token (patient / doctor / admin).
+
+P2 - Search Doctors  (FR-02, FR-03)
+  Accepts specialty and date filters from the patient, queries the
+  Doctors and TimeSlots data stores, and returns a list of doctors
+  with their open slots.
+
+P3 - Book Appointment  (FR-04)
+  Receives the patient's selection, checks for double-booking in
+  the Appointments store, inserts the record, and triggers P7.
+
+P4 - Cancel Appointment  (FR-04)
+  Retrieves the appointment, enforces the cancellation window,
+  updates status to 'cancelled', and triggers P7.
+
+P5 - Manage Schedule  (FR-05)
+  Allows doctors to insert or update their TimeSlots and view
+  their upcoming Appointments.
+
+P6 - Admin Dashboard  (FR-07)
+  Gives admins read/write access to Profiles and Appointments
+  for account management and reporting.
+
+P7 - Send Notification  (FR-06)
+  Receives event details from P3 and P4, delivers email/SMS via
+  NotificationService, and logs every message in the Notifications
+  data store.
+
+Data Stores: D1 Profiles, D2 Doctors, D3 TimeSlots,
+             D4 Appointments, D5 Notifications
+
+================================================================
+LEVEL 2 — Explosion of P3: Book Appointment
+================================================================
+Zooms into P3 and splits it into 4 fine-grained sub-processes:
+
+P3.1 - Validate Slot
+  Checks the TimeSlots store to confirm the chosen time is within
+  a doctor's declared availability window.
+
+P3.2 - Check Double-Booking
+  Queries the Appointments store for an existing row with the same
+  (doctor_id, scheduled_at) pair — maps directly to the unique
+  constraint in schema_milestone2.sql. Returns a 409 Conflict to
+  the patient if taken; otherwise passes control to P3.3.
+
+P3.3 - Create Appointment
+  Executes the INSERT into Appointments with status = 'pending'
+  and retrieves the new appointment ID.
+
+P3.4 - Confirm and Notify
+  Logs a booking-confirmation notification for the patient and a
+  new-appointment alert for the doctor into the Notifications
+  store, then returns a 201 Created response to the patient.
+
+WHY P3 WAS CHOSEN FOR LEVEL 2
+------------------------------
+Booking is the core use case (highest priority — FR-04) and the
+process with the most internal decision points: slot validation,
+double-booking prevention, database insertion, and notification
+dispatch. Exploding it at Level 2 shows exactly where conflicts
+are caught and how the data flows before and after the INSERT.

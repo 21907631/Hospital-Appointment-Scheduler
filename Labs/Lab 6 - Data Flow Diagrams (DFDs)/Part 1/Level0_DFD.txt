@@ -1,0 +1,21 @@
+@startuml Level0_DFD
+!define RECTANGLE class
+
+' External Entities
+RECTANGLE Student <<External>>
+RECTANGLE LibraryDatabase <<External>>
+RECTANGLE NotificationService <<External>>
+RECTANGLE ShelfMechanism <<External>>
+
+' Main System Process
+RECTANGLE ReturnBookSystem <<Process>>
+
+' Data Flows
+Student --> ReturnBookSystem : Book ID, Fine Payment
+ReturnBookSystem --> Student : Return Receipt, Error Messages, Fine Amount
+ReturnBookSystem --> LibraryDatabase : Book Validation Request, Inventory Update
+LibraryDatabase --> ReturnBookSystem : Book Data, Borrower Info
+ReturnBookSystem --> NotificationService : Return Confirmation Details
+ReturnBookSystem --> ShelfMechanism : Signal for Book Placement
+@enduml
+

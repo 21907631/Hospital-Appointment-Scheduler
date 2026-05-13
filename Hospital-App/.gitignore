@@ -9,6 +9,8 @@ node_modules/
 .env.local
 .env.*.local
 
+PROPOSAL.md
+
 # Build outputs
 dist/
 build/

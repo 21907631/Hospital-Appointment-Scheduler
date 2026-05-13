@@ -1,0 +1,43 @@
+@startuml Level2_DFD
+!define RECTANGLE class
+
+' Explodes P3 - Book Appointment into sub-processes
+
+' External Entity
+RECTANGLE Patient <<External>>
+
+' Data Stores
+RECTANGLE D3_TimeSlots <<Data Store>>
+RECTANGLE D4_Appointments <<Data Store>>
+RECTANGLE D5_Notifications <<Data Store>>
+
+' Sub-Processes of P3 - Book Appointment
+RECTANGLE P3_1_ValidateSlot <<Process>>
+RECTANGLE P3_2_CheckDoubleBooking <<Process>>
+RECTANGLE P3_3_CreateAppointment <<Process>>
+RECTANGLE P3_4_ConfirmAndNotify <<Process>>
+
+' Data Flows
+Patient --> P3_1_ValidateSlot : Doctor ID, Scheduled Time, Reason
+
+P3_1_ValidateSlot --> D3_TimeSlots : Query Slot Availability
+D3_TimeSlots --> P3_1_ValidateSlot : Slot Status (open/closed)
+
+P3_1_ValidateSlot --> P3_2_CheckDoubleBooking : Validated Slot Details
+
+P3_2_CheckDoubleBooking --> D4_Appointments : Check (doctor_id, scheduled_at) Unique
+D4_Appointments --> P3_2_CheckDoubleBooking : Conflict Status
+
+P3_2_CheckDoubleBooking --> Patient : 409 Conflict - Slot Unavailable
+P3_2_CheckDoubleBooking --> P3_3_CreateAppointment : No Conflict Confirmed
+
+P3_3_CreateAppointment --> D4_Appointments : INSERT Appointment (status=pending)
+D4_Appointments --> P3_3_CreateAppointment : Appointment ID
+
+P3_3_CreateAppointment --> P3_4_ConfirmAndNotify : Appointment ID + Patient + Doctor Info
+
+P3_4_ConfirmAndNotify --> D5_Notifications : Log Booking Confirmation (patient)
+P3_4_ConfirmAndNotify --> D5_Notifications : Log New Appointment Alert (doctor)
+P3_4_ConfirmAndNotify --> Patient : 201 Created - Appointment Confirmed
+
+@enduml

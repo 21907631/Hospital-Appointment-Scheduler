@@ -1,0 +1,41 @@
+@startuml Level1_DFD
+!define RECTANGLE class
+
+' External Entities
+RECTANGLE Student <<External>>
+RECTANGLE LibraryDatabase <<External>>
+RECTANGLE NotificationService <<External>>
+
+' Data Stores
+RECTANGLE D1_BookInventory <<Data Store>>
+RECTANGLE D2_BorrowerRecords <<Data Store>>
+RECTANGLE D3_TransactionLog <<Data Store>>
+
+' Main Processes
+RECTANGLE P1_ValidateBook <<Process>>
+RECTANGLE P2_CheckDueDate <<Process>>
+RECTANGLE P3_ProcessFine <<Process>>
+RECTANGLE P4_UpdateInventory <<Process>>
+RECTANGLE P5_SendNotification <<Process>>
+
+' Data Flows - Student
+Student --> P1_ValidateBook : Book ID
+P3_ProcessFine --> Student : Fine Amount
+Student --> P3_ProcessFine : Fine Payment
+
+' Data Flows - Library Database / Data Stores
+P1_ValidateBook --> LibraryDatabase : Book Validation Request
+LibraryDatabase --> P1_ValidateBook : Book Info
+P2_CheckDueDate --> D2_BorrowerRecords : Request Borrower Info
+D2_BorrowerRecords --> P2_CheckDueDate : Borrower Info, Due Date
+P4_UpdateInventory --> D1_BookInventory : Inventory Update
+P3_ProcessFine --> D2_BorrowerRecords : Update Payment Status
+P1_ValidateBook --> P2_CheckDueDate : Validated Book ID
+P2_CheckDueDate --> P3_ProcessFine : Overdue Flag
+P3_ProcessFine --> P4_UpdateInventory : Payment Confirmation
+P3_ProcessFine --> D3_TransactionLog : Record Fine Transaction
+P4_UpdateInventory --> D3_TransactionLog : Record Return Transaction
+
+' Notifications
+P5_SendNotification --> NotificationService : Return Confirmation
+@enduml

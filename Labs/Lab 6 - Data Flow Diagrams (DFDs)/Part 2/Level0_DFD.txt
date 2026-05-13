@@ -1,0 +1,26 @@
+@startuml Level0_DFD
+!define RECTANGLE class
+
+' External Entities
+RECTANGLE Patient <<External>>
+RECTANGLE Doctor <<External>>
+RECTANGLE Admin <<External>>
+RECTANGLE NotificationService <<External>>
+
+' Main System Process
+RECTANGLE HospitalAppointmentScheduler <<Process>>
+
+' Data Flows
+Patient --> HospitalAppointmentScheduler : Login Credentials, Booking Request, Cancellation Request
+HospitalAppointmentScheduler --> Patient : Available Slots, Appointment Confirmation, Cancellation Receipt, Reminders
+
+Doctor --> HospitalAppointmentScheduler : Availability Schedule, Appointment Notes
+HospitalAppointmentScheduler --> Doctor : Appointment Requests, Schedule Updates, Cancellation Alerts
+
+Admin --> HospitalAppointmentScheduler : User Management Commands, Report Requests
+HospitalAppointmentScheduler --> Admin : System Reports, User Data
+
+HospitalAppointmentScheduler --> NotificationService : Email/SMS Notification Details
+NotificationService --> HospitalAppointmentScheduler : Delivery Confirmation
+
+@enduml
